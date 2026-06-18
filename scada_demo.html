@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCADA Demo Monitor</title>
+  <link rel="stylesheet" href="scada_demo.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Cloudflare Worker + KV</p>
+        <h1>SCADA Demo Monitor</h1>
+      </div>
+      <div class="status-card">
+        <span class="status-dot" id="statusDot"></span>
+        <div>
+          <small>Last update</small>
+          <strong id="time">--</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="overview">
+      <div class="hero-card">
+        <span class="tag">Realtime</span>
+        <h2>RO System Data</h2>
+        <p>Dữ liệu được Node-RED đẩy lên Cloudflare Worker, web chỉ đọc giá trị mới nhất từ KV.</p>
+      </div>
+
+      <div class="mini-card">
+        <small>API</small>
+        <strong id="apiState">Connecting...</strong>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card ph">
+        <div class="card-head">
+          <span>Sensor_1</span>
+          <small>pH</small>
+        </div>
+        <div class="value"><span id="Sensor_1">--</span></div>
+        <p>Nồng độ pH tiền xử lý</p>
+      </article>
+
+      <article class="card pressure">
+        <div class="card-head">
+          <span>Sensor_2</span>
+          <small>bar</small>
+        </div>
+        <div class="value"><span id="Sensor_2">--</span></div>
+        <p>Áp suất trước lọc thô</p>
+      </article>
+
+      <article class="card flow">
+        <div class="card-head">
+          <span>Sensor_3</span>
+          <small>L/H</small>
+        </div>
+        <div class="value"><span id="Sensor_3">--</span></div>
+        <p>Lưu lượng sau lọc tinh</p>
+      </article>
+
+      <article class="card pressure">
+        <div class="card-head">
+          <span>Sensor_4</span>
+          <small>bar</small>
+        </div>
+        <div class="value"><span id="Sensor_4">--</span></div>
+        <p>Áp suất sau lọc tinh</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://test-woker.manhcuongkioto.workers.dev/data";
+
+    function showValue(id, value, decimal = 2) {
+      const el = document.getElementById(id);
+      const num = Number(value);
+      el.textContent = Number.isFinite(num) ? num.toFixed(decimal) : "--";
+    }
+
+    function setOnline(isOnline) {
+      document.body.classList.toggle("offline", !isOnline);
+      document.getElementById("apiState").textContent = isOnline ? "ONLINE" : "OFFLINE";
+    }
+
+    async function fetchData() {
+      try {
+        const res = await fetch(`${API_URL}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(res.status);
+
+        const d = await res.json();
+
+        showValue("Sensor_1", d.Sensor_1, 2);
+        showValue("Sensor_2", d.Sensor_2, 2);
+        showValue("Sensor_3", d.Sensor_3, 1);
+        showValue("Sensor_4", d.Sensor_4, 2);
+
+        document.getElementById("time").textContent = d.ts
+          ? new Date(d.ts).toLocaleString("vi-VN")
+          : new Date().toLocaleString("vi-VN");
+
+        setOnline(true);
+      } catch (err) {
+        console.error("API error:", err);
+        document.getElementById("time").textContent = "OFFLINE";
+        setOnline(false);
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, 1000);
+  </script>
+</body>
+</html>
