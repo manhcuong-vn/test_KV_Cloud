@@ -88,32 +88,46 @@
       document.getElementById("apiState").textContent = isOnline ? "ONLINE" : "OFFLINE";
     }
 
-    async function fetchData() {
-      try {
-        const res = await fetch(`${API_URL}?t=${Date.now()}`);
-        if (!res.ok) throw new Error(res.status);
+   <script>
+  const API_URL = "https://test-woker.manhcuongkioto.workers.dev/data";
 
-        const d = await res.json();
+  function showValue(id, value, decimal = 2) {
+    const el = document.getElementById(id);
+    const num = Number(value);
+    el.textContent = Number.isFinite(num) ? num.toFixed(decimal) : "--";
+  }
 
-        showValue("Sensor_1", d.Sensor_1, 2);
-        showValue("Sensor_2", d.Sensor_2, 2);
-        showValue("Sensor_3", d.Sensor_3, 1);
-        showValue("Sensor_4", d.Sensor_4, 2);
+  function setOnline(isOnline) {
+    document.body.classList.toggle("offline", !isOnline);
+    document.getElementById("apiState").textContent = isOnline ? "ONLINE" : "OFFLINE";
+  }
 
-        document.getElementById("time").textContent = d.ts
-          ? new Date(d.ts).toLocaleString("vi-VN")
-          : new Date().toLocaleString("vi-VN");
+  async function fetchData() {
+    try {
+      const res = await fetch(`${API_URL}?t=${Date.now()}`);
+      if (!res.ok) throw new Error(res.status);
 
-        setOnline(true);
-      } catch (err) {
-        console.error("API error:", err);
-        document.getElementById("time").textContent = "OFFLINE";
-        setOnline(false);
-      }
+      const d = await res.json();
+
+      showValue("Sensor_1", d.Sensor_1, 2);
+      showValue("Sensor_2", d.Sensor_2, 2);
+      showValue("Sensor_3", d.Sensor_3, 1);
+      showValue("Sensor_4", d.Sensor_4, 2);
+
+      document.getElementById("time").textContent = d.ts
+        ? new Date(d.ts).toLocaleString("vi-VN")
+        : new Date().toLocaleString("vi-VN");
+
+      setOnline(true);
+    } catch (err) {
+      console.error("API error:", err);
+      document.getElementById("time").textContent = "OFFLINE";
+      setOnline(false);
     }
+  }
 
-    fetchData();
-    setInterval(fetchData, 1000);
-  </script>
+  fetchData();
+  setInterval(fetchData, 1000);
+</script>
 </body>
 </html>
